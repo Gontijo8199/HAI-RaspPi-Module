@@ -1,7 +1,6 @@
 import asyncio
 import logging
 import sys
-from typing import Optional
 
 from .audio_stream import MicrophoneStream
 from .whisper_engine import WhisperEngine
@@ -46,34 +45,32 @@ class PttStream:
         whisper_model: str = "medium",
         whisper_device: str = "cpu",
         whisper_compute_type: str = "int8",
-        device_index: Optional[int] = None,
+        device_index: int | None = None,
     ):
         self._sample_rate = sample_rate
 
         self._mic = MicrophoneStream(
             sample_rate=sample_rate,
             chunk_samples=chunk_samples,
-            preroll_ms=0, # sem pre-roll
-            device_index=device_index
+            preroll_ms=0,  # sem pre-roll
+            device_index=device_index,
         )
         self._asr = WhisperEngine(
             model_size=whisper_model,
             device=whisper_device,
             compute_type=whisper_compute_type,
-            language=language
+            language=language,
         )
 
         self._utterance_queue: asyncio.Queue[str] = asyncio.Queue()
         self._is_running = False
-        self._pipeline_task: Optional[asyncio.Task] = None
+        self._pipeline_task: asyncio.Task | None = None
 
     async def start(self) -> None:
         self._is_running = True
         loop = asyncio.get_running_loop()
         self._mic.start(loop)
-        self._pipeline_task = asyncio.create_task(
-            self._ptt_loop(), name="ptt-pipeline"
-        )
+        self._pipeline_task = asyncio.create_task(self._ptt_loop(), name="ptt-pipeline")
         self._pipeline_task.add_done_callback(self._task_error_handler)
 
     async def get_utterance(self) -> str:
@@ -99,9 +96,8 @@ class PttStream:
 
             # drena chunks enquanto aguarda o segundo Enter em paralelo
             stop_event = asyncio.Event()
-            producer   = asyncio.create_task(
-                self._coletar_chunks(recording, stop_event),
-                name="ptt-coletar"
+            producer = asyncio.create_task(
+                self._coletar_chunks(recording, stop_event), name="ptt-coletar"
             )
 
             await self._aguardar_enter()
@@ -112,10 +108,7 @@ class PttStream:
                 continue
 
             audio_bytes = b"".join(recording)
-            asyncio.create_task(
-                self._transcribe_and_enqueue(audio_bytes),
-                name="ptt-transcribe"
-            )
+            asyncio.create_task(self._transcribe_and_enqueue(audio_bytes), name="ptt-transcribe")
 
     async def _coletar_chunks(self, recording: list[bytes], stop: asyncio.Event) -> None:
         """Acumula chunks do microfone até stop ser sinalizado."""
@@ -123,7 +116,7 @@ class PttStream:
             try:
                 chunk = await asyncio.wait_for(self._mic.read_chunk(), timeout=0.1)
                 recording.append(chunk)
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 continue
             except Exception as exc:
                 logger.error("Erro ao coletar chunk PTT: %s", exc)
@@ -155,4 +148,6 @@ class PttStream:
             return
         exc = task.exception()
         if exc is not None:
-            logger.critical("Task '%s' terminou com exceção: %s", task.get_name(), exc, exc_info=exc)
+            logger.critical(
+                "Task '%s' terminou com exceção: %s", task.get_name(), exc, exc_info=exc
+            )

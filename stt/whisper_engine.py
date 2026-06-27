@@ -1,12 +1,14 @@
 import asyncio
+
 import numpy as np
 from faster_whisper import WhisperModel
+
 
 class WhisperEngine:
     """Wrapper assíncrono do faster_whisper.WhisperModel.
 
     O modelo é carregado uma única vez e mantido em memória durante toda a sessão.
-    A transcrição roda em asyncio.to_thread para nunca bloquear o event loop. 
+    A transcrição roda em asyncio.to_thread para nunca bloquear o event loop.
     Como um único worker alimenta o modelo sequencialmente, não é necessário lock.
 
     vad_filter é desativado intencionalmente: o VAD upstream (SileroVAD) já garante que apenas áudio com fala chega aqui.
@@ -39,8 +41,8 @@ class WhisperEngine:
             "Olá. Sou um tutor de ensino fundamental virtual. Como posso te ajudar hoje?"
         ),
     ):
-        self.language       = language
-        self.beam_size      = beam_size
+        self.language = language
+        self.beam_size = beam_size
         self.initial_prompt = initial_prompt
 
         print(f"Carregando Whisper '{model_size}' ({device}, {compute_type})...")
@@ -62,10 +64,10 @@ class WhisperEngine:
             beam_size=self.beam_size,
             temperature=0.0,
             condition_on_previous_text=False,
-            vad_filter=False, # VAD já aplicado upstream pelo SileroVAD
+            vad_filter=False,  # VAD já aplicado upstream pelo SileroVAD
             initial_prompt=self.initial_prompt,
-            log_prob_threshold=-0.85, # descarta palavras com baixa confiança
-            no_speech_threshold=0.6, # ignora segmentos com >= 60 % de silêncio
+            log_prob_threshold=-0.85,  # descarta palavras com baixa confiança
+            no_speech_threshold=0.6,  # ignora segmentos com >= 60 % de silêncio
         )
 
         return " ".join(s.text for s in segments).strip()

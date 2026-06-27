@@ -1,33 +1,33 @@
 # python main.py          VAD automático
 # python main.py --ptt    modo Push-to-Talk via Enter
 
-import sys
-import tomllib
-import re
+import argparse
 import asyncio
 import logging
-import argparse
+import re
+import sys
+import tomllib
 from pathlib import Path
 
 sys.path.append(str(Path(__file__).parent.parent))
 
+from api.llm_client import LLMClient
 from stt.capture import WhisperStream
 from stt.ptt import PttStream
-from api.llm_client import LLMClient
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
 )
 
-CONFIG_PATH  = Path(__file__).parent.parent / "config/settings.toml"
+CONFIG_PATH = Path(__file__).parent.parent / "config/settings.toml"
 SECRETS_PATH = Path(__file__).parent.parent / "config/secrets.toml"
 
 RESET_TRIGGERS = {"resetar", "reset", "nova sessão", "novo assunto", "recomeçar"}
 
 
 def load_config():
-    with open(CONFIG_PATH,  "rb") as f:
+    with open(CONFIG_PATH, "rb") as f:
         settings = tomllib.load(f)
     with open(SECRETS_PATH, "rb") as f:
         secrets = tomllib.load(f)
@@ -50,7 +50,7 @@ async def processar_llm(client: LLMClient, utterance: str):
         print("\n[SESSÃO REINICIADA] Histórico apagado.")
         return
 
-    print(f"\n[ENVIANDO PARA LLM] -> \"{utterance}\"")
+    print(f'\n[ENVIANDO PARA LLM] -> "{utterance}"')
     try:
         resposta = await asyncio.to_thread(client.send, utterance)
         print(f"\n[RESPOSTA] {resposta}")
@@ -67,15 +67,15 @@ async def async_main(ptt: bool):
     model = settings["api"]["model"]
 
     # [stt]
-    lang          = settings["stt"]["language"]
+    lang = settings["stt"]["language"]
     whisper_model = settings["stt"]["whisper_model"]
-    whisper_device       = settings["stt"]["whisper_device"]
+    whisper_device = settings["stt"]["whisper_device"]
     whisper_compute_type = settings["stt"]["whisper_compute_type"]
 
     # [vad]
     vad_threshold = settings["vad"]["threshold"]
-    preroll_ms    = settings["vad"]["preroll_ms"]
-    silence_ms    = settings["vad"]["silence_ms"]
+    preroll_ms = settings["vad"]["preroll_ms"]
+    silence_ms = settings["vad"]["silence_ms"]
 
     if not api_key:
         raise ValueError("api.key não definida em config/secrets.toml")
@@ -108,7 +108,7 @@ async def async_main(ptt: bool):
         while True:
             utterance = await stt.get_utterance()
 
-            if not re.search(r'[a-zA-Z0-9á-úÁ-Ú]', utterance):
+            if not re.search(r"[a-zA-Z0-9á-úÁ-Ú]", utterance):
                 print(f"Ignorando ruído/transcrição vazia: '{utterance}'")
                 continue
 

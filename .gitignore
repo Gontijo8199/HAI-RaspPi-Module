@@ -4,6 +4,9 @@ config/settings.toml
 .env
 .venv/
 
+.ruff_cache
+.pytest_cache
+
 __pycache__/
 
 *.pyc

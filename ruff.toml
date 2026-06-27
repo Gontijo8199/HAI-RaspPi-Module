@@ -1,0 +1,17 @@
+target-version = "py312"
+line-length = 100
+
+[lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "UP",  # pyupgrade
+]
+ignore = [
+    "E501",  # line too long, deixamos o formatter cuidar disso
+]
+
+[lint.per-file-ignores]
+"tests/*" = ["F401"]  # imports não usados em fixtures são normais

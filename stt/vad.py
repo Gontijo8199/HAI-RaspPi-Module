@@ -1,6 +1,5 @@
-import torch
 import numpy as np
-from typing import Tuple
+import torch
 
 
 class SileroVAD:
@@ -32,7 +31,7 @@ class SileroVAD:
             repo_or_dir="snakers4/silero-vad",
             model="silero_vad",
             force_reload=False,
-            trust_repo=True
+            trust_repo=True,
         )
         self._model.eval()
         print("Silero VAD pronto.")
@@ -40,7 +39,7 @@ class SileroVAD:
     def reset_state(self) -> None:
         self._model.reset_states()
 
-    def is_speech(self, pcm_chunk: bytes) -> Tuple[bool, float]:
+    def is_speech(self, pcm_chunk: bytes) -> tuple[bool, float]:
         """Classifica um único chunk PCM-16 de 512 amostras.
 
         Parâmetros

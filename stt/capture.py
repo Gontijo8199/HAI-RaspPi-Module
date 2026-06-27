@@ -1,6 +1,5 @@
 import asyncio
 import logging
-from typing import Optional
 
 from .audio_stream import MicrophoneStream
 from .vad import SileroVAD
@@ -36,7 +35,7 @@ class WhisperStream:
         Índice do dispositivo PyAudio. None usa o padrão do sistema.
     """
 
-    SAMPLE_RATE   = 16000
+    SAMPLE_RATE = 16000
     CHUNK_SAMPLES = 512  # 32 ms a 16 kHz, exigido pelo Silero VAD
 
     def __init__(
@@ -50,7 +49,7 @@ class WhisperStream:
         whisper_model: str = "medium",
         whisper_device: str = "cpu",
         whisper_compute_type: str = "int8",
-        device_index: Optional[int] = None,
+        device_index: int | None = None,
     ):
         if sample_rate != 16000:
             raise ValueError("sample_rate deve ser 16000 (exigência do Silero VAD).")
@@ -58,7 +57,7 @@ class WhisperStream:
             raise ValueError("chunk_samples deve ser 512 (exigência do Silero VAD).")
 
         self._sample_rate = sample_rate
-        self._silence_ms= silence_ms
+        self._silence_ms = silence_ms
 
         frame_ms = (chunk_samples / sample_rate) * 1000  # 32 ms por frame
         self._silence_frames = max(1, int(silence_ms / frame_ms))
@@ -80,7 +79,7 @@ class WhisperStream:
 
         self._utterance_queue: asyncio.Queue[str] = asyncio.Queue()
         self._is_running = False
-        self._pipeline_task: Optional[asyncio.Task] = None
+        self._pipeline_task: asyncio.Task | None = None
 
     async def start(self) -> None:
         self._is_running = True
@@ -102,7 +101,7 @@ class WhisperStream:
     async def _pipeline_loop(self) -> None:
         recording: list[bytes] = []
         silent_frames = 0
-        is_recording  = False
+        is_recording = False
 
         logger.info("Pipeline VAD iniciado. Aguardando fala...")
         print("Ouvindo... (fale qualquer coisa)")
@@ -120,9 +119,9 @@ class WhisperStream:
                 if not is_recording:
                     logger.debug("Onset de fala detectado (prob=%.2f)", prob)
                     self._vad.reset_state()
-                    preroll   = self._mic.get_preroll()
+                    preroll = self._mic.get_preroll()
                     recording = [preroll, chunk] if preroll else [chunk]
-                    is_recording  = True
+                    is_recording = True
                     silent_frames = 0
                     print("\n[GRAVANDO...]")
                 else:
@@ -136,7 +135,7 @@ class WhisperStream:
                 if silent_frames >= self._silence_frames:
                     is_recording = False
                     audio_bytes = b"".join(recording)
-                    recording  = []
+                    recording = []
                     silent_frames = 0
                     self._mic.clear_preroll()
                     asyncio.create_task(
@@ -165,4 +164,6 @@ class WhisperStream:
             return
         exc = task.exception()
         if exc is not None:
-            logger.critical("Task '%s' terminou com exceção: %s", task.get_name(), exc, exc_info=exc)
+            logger.critical(
+                "Task '%s' terminou com exceção: %s", task.get_name(), exc, exc_info=exc
+            )

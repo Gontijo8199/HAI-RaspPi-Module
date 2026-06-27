@@ -1,3 +1,4 @@
+from typing import Any
 
 from google import genai
 from google.genai import types
@@ -56,5 +57,8 @@ class LLMClient:
     def resetar_sessao(self) -> None:
         self._chat = self._nova_sessao()
 
-    def _nova_sessao(self) -> types.Chat:
-        return self._client.chats.create(model=self.model, config=types.GenerateContentConfig(system_instruction=self.SYSTEM_PROMPT))
+    def _nova_sessao(self) -> Any:
+        return self._client.chats.create(
+            model=self.model,
+            config=types.GenerateContentConfig(system_instruction=self.SYSTEM_PROMPT),
+        )

@@ -1,7 +1,7 @@
 import asyncio
-import pyaudio
 from collections import deque
-from typing import Optional
+
+import pyaudio
 
 
 class MicrophoneStream:
@@ -23,7 +23,7 @@ class MicrophoneStream:
         Índice do dispositivo PyAudio. None usa o padrão do sistema.
     """
 
-    FORMAT   = pyaudio.paInt16
+    FORMAT = pyaudio.paInt16
     CHANNELS = 1
 
     def __init__(
@@ -31,7 +31,7 @@ class MicrophoneStream:
         sample_rate: int = 16000,
         chunk_samples: int = 512,
         preroll_ms: int = 500,
-        device_index: Optional[int] = None,
+        device_index: int | None = None,
     ):
         self.sample_rate = sample_rate
         self.chunk_samples = chunk_samples
@@ -41,10 +41,10 @@ class MicrophoneStream:
         preroll_chunks = max(1, int(preroll_ms / chunk_ms))
         self._preroll: deque[bytes] = deque(maxlen=preroll_chunks)
 
-        self._audio  = pyaudio.PyAudio()
-        self._stream: Optional[pyaudio.Stream] = None
+        self._audio = pyaudio.PyAudio()
+        self._stream: pyaudio.Stream | None = None
         self._queue: asyncio.Queue[bytes] = asyncio.Queue()
-        self._loop: Optional[asyncio.AbstractEventLoop] = None
+        self._loop: asyncio.AbstractEventLoop | None = None
         self._running = False
 
     def start(self, loop: asyncio.AbstractEventLoop) -> None:
