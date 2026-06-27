@@ -1,0 +1,10 @@
+# requirements.txt
+
+#   pip install -r requirements.txt
+#   sudo apt-get install -y portaudio19-dev python3-dev
+
+PyAudio>=0.2.14
+torch>=2.0.0
+torchaudio>=2.0.0
+faster-whisper>=1.0.0
+google-genai>=1.0.0
